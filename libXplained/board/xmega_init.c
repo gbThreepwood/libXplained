@@ -17,6 +17,41 @@
 
 #include "xmega_init.h"
 
+/*!
+  Initializes the interrupt controller.
+  Enable interrupts on PortD and PortR as these ports are
+  connected to the push buttons
+*/
+void xmega_init_interrupt()
+{
+	/* PMIC - Programmable multilevel interrupt controller.
+	 * Styrer avbruddssystemet */
+	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
+	PMIC.INTPRI = 0x00;
+	//PMIC.STATUS;
+
+	/* Avbruddskontroll port D */
+	PORTD.INTCTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm; /* Avbruddsnivå */
+	PORTD.INT0MASK = 0xFF; /* Velger kva pinnar som skal trigga avbrudd 0. */
+	//PORTD.INT1MASK = 0xFF; /* Velger kva pinnar som skal trigga avbrudd 1. */
+	// PORTD.INTFLAGS; /* Indikerer om avbrudd er trigga.  */
+
+	/* Avbruddskontroll port R */
+	PORTR.INTCTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm; /* Avbruddsnivå */
+	PORTR.INT0MASK = 0xFF; /* Velger kva pinnar som skal trigga avbrudd 0. */
+	//PORTR.INT1MASK = 0xFF; /* Velger kva pinnar som skal trigga avbrudd 1. */
+	// PORTR.INTFLAGS; /* Indikerer om avbrudd er trigga.  */
+
+	sei(); /* Set global interrupt flag */
+}
+
+/*!
+  Performs necessary initialization on the ports.
+  The ports ar initialized differently depending on what kind of external hardware
+  they connect to.
+
+  By default the pin headers are initialized as outputs.
+*/
 void xmega_init()
 {
 	/*-------------------- Port A --------------------*/

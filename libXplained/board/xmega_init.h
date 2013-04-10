@@ -27,7 +27,8 @@
 #include <util/atomic.h>
 #include <util/delay.h>
 
-/* Funksjonsdeklarasjonar */
+/* Function declarations */
 void xmega_init();
+void xmega_init_interrupt();
 
 #endif /* XMEGA_INIT_H_ */
