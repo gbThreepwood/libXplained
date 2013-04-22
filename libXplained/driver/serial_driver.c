@@ -1,36 +1,49 @@
-/*********************************************
- * vim:sw=8:ts=8:si:et
- * To use the above modeline in vim you must have "set modeline" in your .vimrc
+/**
+ *  vim:sw=8:ts=8:si:et
+ *  To use the above modeline in vim you must have "set modeline" in your .vimrc
  *
- * Filename: serial_driver.c
+ *  Filename: serial.c
  *
- *  Created on: 4. apr. 2013
+ *   Created on: 4. apr. 2013
  *
- * Author: eirik
+ *  Author: Eirik Haustveit
  *
- * Copyright:GPL V3
- * See http://www.gnu.org/licenses/gpl.html
+ *  Copyright (c) Eirik Haustveit, 2013
  *
- * Description:
  *
- *********************************************/
+ *	This file is part of Oblig_4.
+ *
+ *   Oblig_4 is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   Oblig_4 is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with Oblig_4.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-/*
-	This file is part of libXplained.
 
-    libXplained is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    libXplained is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with libXplained.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/* How to initialize a i/o stream that communicates with the USART:
+ *
+ * Include the library:
+ * #include <stdio.h>
+ *
+ * Create av new iostream:
+ * static FILE serial_stdio = FDEV_SETUP_STREAM (uart_putchar, uart_getchar, _FDEV_SETUP_RW);
+ *
+ * Use the following function:
+ * fprintf(serial_stdio, ...)
+ *
+ * or set:
+ * stdin = stdout = &serial_stdio;
+ * and use regular printf(...);
+ *
+ */
 
 #include "serial_driver.h"
 
@@ -77,6 +90,42 @@ void UsartInit()
 	 * USART_PMODE_ODD_gc
 	 */
 	SERIAL_PORT_USART.CTRLC = USART_CMODE_ASYNCHRONOUS_gc | USART_PMODE_DISABLED_gc | USART_CHSIZE_8BIT_gc;
+}
+
+int uart_putchar (char c, FILE *stream)
+{
+	/* If the char is a newline: add a '\r' */
+    if (c == '\n')
+        uart_putchar('\r', stream);
+
+    /* Wait until the USART is ready */
+    while ( !( SERIAL_PORT_USART.STATUS & USART_DREIF_bm) );
+
+    /* Put the char into the transmit buffer. */
+    SERIAL_PORT_USART.DATA = c;
+
+    return 0;
+}
+
+int uart_getchar (FILE *stream)
+{
+	uint8_t data;
+
+	while(!(SERIAL_PORT_USART.STATUS & USART_RXCIF_bm));  // Loop until RX is complete.
+	data = SERIAL_PORT_USART.DATA;
+
+	/* Echo the data back to the terminal. */
+	//uart_putchar (data, stream);
+
+	return data;
+}
+
+uint8_t usart_rx_is_complete()
+{
+	if(SERIAL_PORT_USART.STATUS & USART_RXCIF_bm)
+		return 1;
+
+	return 0;
 }
 
 /*!
