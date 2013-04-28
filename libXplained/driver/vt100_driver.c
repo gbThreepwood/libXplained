@@ -78,3 +78,40 @@ void vt100SetAttribute(uint8_t attr)
 	/* ESC [ Ps m */
 	printf("\x1B[%dm",attr);
 }
+
+void vt100ClearScreen()
+{
+	printf("\x1B[2J");
+}
+
+void vt100SetCursorMode(uint8_t mode)
+{
+	if(mode)
+		printf("\x1B[?25h");
+	else
+		printf("\x1B[?25l");
+}
+
+void vt100DrawBox(uint8_t line, uint8_t col, uint8_t width, uint8_t heigth)
+{
+	printf("\x1B(0");	/* Switch to graphic character set. */
+	
+	vt100MoveCursor(line, col);
+	
+	for(int i = 0; i < heigth; i++)
+	{
+		vt100MoveCursor(line + i, col);
+		
+		if((i == 0) || (i == (line + height)))
+			for(int j = 0; j < width; j++)
+			{
+				printf("-");
+			}
+		
+		printf("|");
+		vt100MoveCursor(line + i, col + width);
+		printf("|");
+	}
+	
+	printf("\x1B(B");	/* Switch to normal character set. */
+}
